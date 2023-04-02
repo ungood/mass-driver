@@ -17,36 +17,57 @@ class Magnet {
     }
 }
 
+interface DigitalSensor {
+    onTriggered(body: () => void): void;
+    disable(): void;
+}
 
-class Sensor {
-    readonly pin: number;
+class TouchSensor implements DigitalSensor {
+    readonly pin: TouchPin;
 
-    constructor(pin: number) {
+    constructor(pin: TouchPin) {
         this.pin = pin;
     }
     
-    public on_triggered(body: () => void) {
+    public onTriggered(body: () => void) {
         input.onPinPressed(this.pin, body);
     }
     
     public disable() {
         input.onPinPressed(this.pin, () => {});
     }
-}    
+}
+
+class HallSensor implements DigitalSensor {
+    readonly pin: DigitalPin;
+
+    constructor(pin: DigitalPin) {
+        this.pin = pin;
+        pins.setPull(this.pin, PinPullMode.PullUp);
+    }
+
+    public onTriggered(body: () => void) {
+        pins.onPulsed(this.pin, PulseValue.High, body);
+    }
+
+    public disable() {
+        pins.onPulsed(this.pin, PulseValue.Low, () => {});
+    }
+}
 
 class Coil {
     readonly magnet: Magnet;
-    readonly sensor: Sensor;
-    readonly next_coil: Coil;
+    readonly sensor: DigitalSensor;
+    readonly nextCoil: Coil;
 
-    constructor(magnet: Magnet, sensor: Sensor, next_coil: Coil = null) {
+    constructor(magnet: Magnet, sensor: DigitalSensor, nextCoil: Coil = null) {
         this.magnet = magnet;
         this.sensor = sensor;
-        this.next_coil = next_coil;
+        this.nextCoil = nextCoil;
     }
 
     public on() {
-        this.sensor.on_triggered(() => this.off());
+        this.sensor.onTriggered(() => this.off());
         this.magnet.on();
         basic.pause(safety_delay_ms);
         this.magnet.off();
@@ -56,14 +77,21 @@ class Coil {
         this.sensor.disable();
         this.magnet.off();
 
-        if(this.next_coil) {
-            this.next_coil.on();
+        if (this.nextCoil) {
+            this.nextCoil.on();
         }
     }
 }
 
-let coil2 = new Coil(new Magnet(2), new Sensor(TouchPin.P2));
-let coil1 = new Coil(new Magnet(1), new Sensor(TouchPin.P1), coil2);
-let coil0 = new Coil(new Magnet(0), new Sensor(TouchPin.P0), coil1);
+
+// Mock Mass Driver
+// let coil2 = new Coil(new Magnet(2), new TouchSensor(TouchPin.P2));
+// let coil1 = new Coil(new Magnet(1), new TouchSensor(TouchPin.P1), coil2);
+// let coil0 = new Coil(new Magnet(0), new TouchSensor(TouchPin.P0), coil1);
+
+// Real Mass Driver
+let coil2 = new Coil(new Magnet(2), new HallSensor(DigitalPin.P2));
+let coil1 = new Coil(new Magnet(1), new HallSensor(DigitalPin.P1), coil2);
+let coil0 = new Coil(new Magnet(0), new HallSensor(DigitalPin.P0), coil1);
 
 input.onLogoEvent(TouchButtonEvent.Pressed, () => coil0.on());
