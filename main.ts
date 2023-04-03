@@ -1,8 +1,42 @@
-let safety_delay_ms = 5000;
+interface Magnet{
+    readonly safetyDelay: number;
+    on(): void;
+    off(): void;
+}
+
+Kitronik_Robotics_Board.motorOn(Kitronik_Robotics_Board.Motors.Motor1, Kitronik_Robotics_Board.MotorDirection.Forward, 0)
+Kitronik_Robotics_Board.motorOff(Kitronik_Robotics_Board.Motors.Motor1)
+
+class Electromagnet implements Magnet {
+    readonly motor : Kitronik_Robotics_Board.Motors;
+    readonly ledNumber : number;
+    readonly safetyDelay: number = 100;
 
 
-class Magnet {
+    constructor(motor : Kitronik_Robotics_Board.Motors, ledNumber : number){
+        this.motor = motor;
+        this.ledNumber = ledNumber;
+    }
+
+    public on() {
+        led.plot(this.ledNumber, 2);
+        Kitronik_Robotics_Board.motorOn(
+            this.motor,
+            Kitronik_Robotics_Board.MotorDirection.Forward,
+            100
+        );
+    }
+
+    public off() {
+        led.unplot(this.ledNumber, 2);
+        Kitronik_Robotics_Board.motorOff(this.motor);
+
+    }
+}
+
+class TestMagnet implements Magnet {
     readonly number: number;
+    readonly safetyDelay: number = 5000;
 
     constructor(number: number) {
         this.number = number;
@@ -16,6 +50,8 @@ class Magnet {
         led.unplot(this.number, 2);
     }
 }
+
+
 
 interface DigitalSensor {
     onTriggered(body: () => void): void;
@@ -47,11 +83,11 @@ class HallSensor implements DigitalSensor {
     }
 
     public onTriggered(body: () => void) {
-        pins.onPulsed(this.pin, PulseValue.High, body);
+        pins.onPulsed(this.pin, PulseValue.Low, body);
     }
 
     public disable() {
-        pins.onPulsed(this.pin, PulseValue.Low, () => {});
+        pins.onPulsed(this.pin, PulseValue.High, () => {});
     }
 }
 
@@ -69,7 +105,7 @@ class Coil {
     public on() {
         this.sensor.onTriggered(() => this.off());
         this.magnet.on();
-        basic.pause(safety_delay_ms);
+        basic.pause(this.magnet.safetyDelay);
         this.magnet.off();
     }
 
@@ -90,8 +126,21 @@ class Coil {
 // let coil0 = new Coil(new Magnet(0), new TouchSensor(TouchPin.P0), coil1);
 
 // Real Mass Driver
-let coil2 = new Coil(new Magnet(2), new HallSensor(DigitalPin.P2));
-let coil1 = new Coil(new Magnet(1), new HallSensor(DigitalPin.P1), coil2);
-let coil0 = new Coil(new Magnet(0), new HallSensor(DigitalPin.P0), coil1);
+Kitronik_Robotics_Board.allOff();
+
+let coil2 = new Coil(
+    new Electromagnet(2, Kitronik_Robotics_Board.Motors.Motor3),
+    new HallSensor(DigitalPin.P2)
+);
+let coil1 = new Coil(
+    new Electromagnet(1, Kitronik_Robotics_Board.Motors.Motor2),
+    new HallSensor(DigitalPin.P1),
+    coil2
+);
+let coil0 = new Coil(
+    new Electromagnet(0, Kitronik_Robotics_Board.Motors.Motor1),
+    new HallSensor(DigitalPin.P0),
+    coil1
+);
 
 input.onLogoEvent(TouchButtonEvent.Pressed, () => coil0.on());
