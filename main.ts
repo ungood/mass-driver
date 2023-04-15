@@ -4,33 +4,20 @@ interface Magnet{
     off(): void;
 }
 
-Kitronik_Robotics_Board.motorOn(Kitronik_Robotics_Board.Motors.Motor1, Kitronik_Robotics_Board.MotorDirection.Forward, 0)
-Kitronik_Robotics_Board.motorOff(Kitronik_Robotics_Board.Motors.Motor1)
-
 class Electromagnet implements Magnet {
-    readonly motor : Kitronik_Robotics_Board.Motors;
-    readonly ledNumber : number;
-    readonly safetyDelay: number = 100;
+    readonly pin : DigitalPin;
+    readonly safetyDelay: number = 250;
 
-
-    constructor(motor : Kitronik_Robotics_Board.Motors, ledNumber : number){
-        this.motor = motor;
-        this.ledNumber = ledNumber;
+    constructor(pin : DigitalPin) {
+        this.pin = pin;
     }
 
     public on() {
-        led.plot(this.ledNumber, 2);
-        Kitronik_Robotics_Board.motorOn(
-            this.motor,
-            Kitronik_Robotics_Board.MotorDirection.Forward,
-            100
-        );
+        pins.digitalWritePin(this.pin, 1);
     }
 
     public off() {
-        led.unplot(this.ledNumber, 2);
-        Kitronik_Robotics_Board.motorOff(this.motor);
-
+        pins.digitalWritePin(this.pin, 0);
     }
 }
 
@@ -50,7 +37,6 @@ class TestMagnet implements Magnet {
         led.unplot(this.number, 2);
     }
 }
-
 
 
 interface DigitalSensor {
@@ -119,26 +105,25 @@ class Coil {
     }
 }
 
-
 // Mock Mass Driver
 // let coil2 = new Coil(new Magnet(2), new TouchSensor(TouchPin.P2));
 // let coil1 = new Coil(new Magnet(1), new TouchSensor(TouchPin.P1), coil2);
 // let coil0 = new Coil(new Magnet(0), new TouchSensor(TouchPin.P0), coil1);
 
-// Real Mass Driver
-Kitronik_Robotics_Board.allOff();
+
+led.enable(false);
 
 let coil2 = new Coil(
-    new Electromagnet(2, Kitronik_Robotics_Board.Motors.Motor3),
+    new Electromagnet(DigitalPin.P8),
     new HallSensor(DigitalPin.P2)
 );
 let coil1 = new Coil(
-    new Electromagnet(1, Kitronik_Robotics_Board.Motors.Motor2),
+    new Electromagnet(DigitalPin.P7),
     new HallSensor(DigitalPin.P1),
     coil2
 );
 let coil0 = new Coil(
-    new Electromagnet(0, Kitronik_Robotics_Board.Motors.Motor1),
+    new Electromagnet(DigitalPin.P6),
     new HallSensor(DigitalPin.P0),
     coil1
 );
