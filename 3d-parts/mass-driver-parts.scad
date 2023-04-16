@@ -1,6 +1,7 @@
 $fn = 64;
 
 nozzle_diameter = 0.4;
+layer_height = nozzle_diameter / 2;
 
 // outer diameter of the tube we're using.
 tube_diameter = 10.0;
