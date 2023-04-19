@@ -1,13 +1,13 @@
 include <./mass-driver-parts.scad>;
 
 base_diameter = tube_diameter + 5;
-base_height = 10;
+base_height = 20;
 
 num_arms = 3;
 
 module holder() {
-    inner_diameter = 6; // 1/4" in mm
-    outer_diameter = tube_diameter + loose_fit;
+    inner_diameter = tube_inner_diameter - tight_fit;
+    outer_diameter = tube_diameter + tight_fit;
     
     tube(inner_diameter, outer_diameter, base_height);
 }
