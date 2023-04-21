@@ -5,7 +5,7 @@ layer_height = nozzle_diameter / 2;
 
 // outer diameter of the tube we're using.
 // Was using 10mm OD tube, but switched to 3/8" OD, 1/4" ID
-tube_diameter = 9.525;
+tube_diameter = 9.75;
 tube_inner_diameter = 6.35;
 
 // Tolerances to add to an inner diameter so it fits over

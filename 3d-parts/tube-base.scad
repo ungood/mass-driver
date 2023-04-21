@@ -6,7 +6,7 @@ base_height = 20;
 num_arms = 3;
 
 module holder() {
-    inner_diameter = tube_inner_diameter - tight_fit;
+    inner_diameter = tube_inner_diameter - loose_fit;
     outer_diameter = tube_diameter + tight_fit;
     
     tube(inner_diameter, outer_diameter, base_height);
